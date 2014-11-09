@@ -1,16 +1,9 @@
+{-# LANGUAGE Rank2Types #-}
 module DeBruijn where
 
 import Data.Foldable
 import Data.Monoid ((<>))
 -- debruijn as nested notation paper
-data Term a = Var a
-            | Lam (Incr (Term a))
-            | App (Term a) (Term a)
-            deriving Show
-                     
-data Incr v = Succ (Incr v)
-            | Zero
-            deriving Show
 
 data BinTree a = Leaf a | Fork (BinTree a) (BinTree a)
                deriving Show
@@ -93,4 +86,50 @@ instance Monad BinTree where
    join . unit = id
    join . fmap join = join . join
 
+   joinB = foldB id Fork
 -}
+
+data Pair a = Pair a a
+            deriving Show 
+
+data Term a = Var a
+            | Lam (Term (Incr a))
+            | App (Pair (Term a))
+            deriving Show
+                     
+data Incr v = Succ (Incr v)
+            | Zero
+            deriving Show
+
+instance Functor Incr where
+  fmap f (Succ v) = Succ (fmap f v)
+  fmap _ Zero = Zero
+
+instance Functor Term where
+  fmap f (Var a) = Var $ f a
+  fmap f (Lam a) = Lam (fmap (fmap f) a)
+  fmap f (App a) = App (fmap (fmap f) a)
+
+instance Functor Pair where
+  fmap f (Pair a b) = Pair (f a) (f b)
+
+foldT :: (forall a .a -> f a) ->
+         (forall a .Pair (f a) -> f a) ->
+         (forall a .f (Incr a) -> f a) ->
+         Term b -> f b
+         
+foldT v _ _ (Var t) = v t
+foldT v a l (Lam t) = l . (foldT v a l) $ t
+foldT v a l (App p) = a . fmap (foldT v a l) $ p             
+
+-- naturality law
+-- fmap(N) k . foldT v a l = foldT v a l . fmap(T) k
+
+gfoldT :: (forall a .m a -> f a) ->
+         (forall a .Pair (f a) -> f a) ->
+         (forall a .f (Incr a) -> f a) ->
+         (forall a .Incr (m a) -> m (Incr a)) ->   
+         Term (m b) -> f b
+gfoldT v _ _ _ (Var a) = v a
+gfoldT v a l k (App p) = (a . fmap (gfoldT v a l k)) p
+gfoldT v a l k (Lam p) = (l . gfoldT v a l k . fmap k) p
