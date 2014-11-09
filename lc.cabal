@@ -19,6 +19,7 @@ library
   exposed-modules:     Parser
                      , Naive
                      , LC
+                     , DeBruijn
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.7 && <4.8
