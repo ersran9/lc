@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types, ScopedTypeVariables #-}
 module DeBruijn where
 
 import Data.Foldable
@@ -97,12 +97,12 @@ data Term a = Var a
             | App (Pair (Term a))
             deriving Show
                      
-data Incr v = Succ (Incr v)
+data Incr v = Succ v
             | Zero
             deriving Show
 
 instance Functor Incr where
-  fmap f (Succ v) = Succ (fmap f v)
+  fmap f (Succ v) = Succ (f v)
   fmap _ Zero = Zero
 
 instance Functor Term where
@@ -133,3 +133,29 @@ gfoldT :: (forall a .m a -> f a) ->
 gfoldT v _ _ _ (Var a) = v a
 gfoldT v a l k (App p) = (a . fmap (gfoldT v a l k)) p
 gfoldT v a l k (Lam p) = (l . gfoldT v a l k . fmap k) p
+
+-- monad definition
+
+joinT :: Term (Term a) -> Term a
+joinT = gfoldT id App Lam distT
+
+
+distT :: (Incr (Term a)) -> (Term (Incr a))
+distT Zero = Var Zero
+distT (Succ v) = fmap Succ v
+
+-- real deal
+abstract :: Eq a => a -> Term a -> Term a
+abstract x = Lam . fmap (match x)
+
+match :: Eq a => a -> a -> Incr a
+match x y = case x == y of
+  True -> Zero
+  False -> Succ y
+
+apply :: Term a -> Term (Incr a) -> Term a
+apply t = joinT . fmap (subst t . fmap Var)
+
+subst :: a -> Incr a -> a
+subst x Zero = x
+subst _ (Succ y) = y
