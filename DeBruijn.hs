@@ -159,3 +159,15 @@ apply t = joinT . fmap (subst t . fmap Var)
 subst :: a -> Incr a -> a
 subst x Zero = x
 subst _ (Succ y) = y
+
+-- helpers
+
+app :: Term a -> Term a -> Term a
+app t1 t2 = App (Pair t1 t2)
+
+var :: a -> Term a
+var = Var
+
+unLam :: Term a -> Term (Incr a)
+unLam (Lam a) = a
+unLam _ = undefined
