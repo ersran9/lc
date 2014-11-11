@@ -20,12 +20,14 @@ library
                      , Naive
                      , LC
                      , DeBruijn
+                     , LCBound
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.7 && <4.8
                     ,  parsec == 3.1.*
                     ,  containers
                     ,  text
-                    ,  mtl == 2.2.* 
+                    ,  mtl == 2.2.*
+                    ,  bound == 1.0.* 
   -- hs-source-dirs:      
   default-language:    Haskell2010
