@@ -28,6 +28,7 @@ library
                     ,  containers
                     ,  text
                     ,  mtl == 2.2.*
-                    ,  bound == 1.0.* 
+                    ,  bound == 1.0.*
+                    ,  prelude-extras == 0.4.* 
   -- hs-source-dirs:      
   default-language:    Haskell2010
